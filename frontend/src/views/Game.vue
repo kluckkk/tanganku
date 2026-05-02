@@ -1,0 +1,381 @@
+<template>
+  <div class="game-container">
+    <div class="game-header">
+      <div class="hearts">
+        <span v-for="i in 5" :key="i" class="heart">
+          {{ i <= state.hearts ? '❤️' : '🖤' }}
+        </span>
+      </div>
+      <div class="score">Skor: {{ state.score }}</div>
+      <div class="level">Level: {{ state.currentLevel }}</div>
+      <button @click="setView('MainMenu')" class="exit-btn">Keluar</button>
+    </div>
+
+    <div class="game-area" ref="gameAreaRef">
+      <!-- Falling Letters -->
+      <div 
+        v-for="letter in activeLetters" 
+        :key="letter.id" 
+        class="falling-letter"
+        :style="{ left: letter.x + 'px', top: letter.y + 'px' }"
+      >
+        <div class="letter-circle">{{ letter.char }}</div>
+      </div>
+
+      <!-- Camera Feed (Bottom Right) -->
+      <div class="mini-camera">
+        <video ref="videoRef" autoplay playsinline></video>
+        <canvas ref="canvasRef"></canvas>
+        <div class="feedback" v-if="detectedGesture">
+          {{ detectedGesture }}
+        </div>
+      </div>
+
+      <!-- Overlays -->
+      <div v-if="gameOver" class="overlay">
+        <h2>Ayo Coba Lagi!</h2>
+        <button @click="restartGame">Main Lagi</button>
+      </div>
+
+      <div v-if="levelSuccess" class="overlay success">
+        <h2>Kamu Berhasil!</h2>
+        <p>Siap untuk Level {{ state.currentLevel }}?</p>
+        <div class="button-group">
+          <button
+            v-if="!isNextLevelFinal"
+            @click="goToTutorial"
+            class="learn-btn"
+          >
+            {{ isRecapNext ? 'Pelajari Huruf' : 'Pelajari Huruf Baru' }}
+          </button>
+          <button @click="startNextLevel">
+            {{ isNextLevelFinal ? 'Level Terakhir' : 'Langsung Main' }}
+          </button>
+          <p v-if="isNextLevelFinal" class="instruction-text">Semua huruf akan ditampilkan!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue';
+import { useGameState } from '../composables/useGameState';
+import { useHandTracking } from '../composables/useHandTracking';
+
+const MAX_LEVEL = 13;
+
+const { state, loseHeart, addScore, nextLevel, setView, resetGame } = useGameState();
+const { startTracking, stopTracking, detectedGesture } = useHandTracking();
+
+const videoRef = ref<HTMLVideoElement | null>(null);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const gameAreaRef = ref<HTMLElement | null>(null);
+
+const activeLetters = ref<any[]>([]);
+const gameOver = ref(false);
+const levelSuccess = ref(false);
+const gameIsActive = ref(false);
+let gameLoop: number;
+let spawnInterval: any;
+
+const isRecapNext = computed(() => {
+  return [3, 6, 9, 12, MAX_LEVEL].includes(state.currentLevel);
+});
+
+const isNextLevelFinal = computed(() => {
+  return state.currentLevel + 1 === MAX_LEVEL;
+});
+
+const goToTutorial = () => {
+  console.log("goToTutorial called. currentLevel:", state.currentLevel);
+  setView('Tutorial');
+};
+
+const getLettersPool = () => {
+  const gameLevels = [
+    ['A', 'B', 'C'], // L1
+    ['D', 'E', 'F'], // L2
+    ['A', 'B', 'C', 'D', 'E', 'F'], // L3 (Recap A-F)
+    ['G', 'H', 'I'], // L4
+    ['J', 'K', 'L'], // L5
+    ['G', 'H', 'I', 'J', 'K', 'L'], // L6 (Recap G-L)
+    ['M', 'N', 'O'], // L7
+    ['P', 'Q', 'R', 'S'], // L8
+    ['M', 'N', 'O', 'P', 'Q', 'R', 'S'], // L9 (Recap M-S)
+    ['T', 'U', 'V'], // L10
+    ['W', 'X', 'Y', 'Z'], // L11
+    ['T', 'U', 'V', 'W', 'X', 'Y', 'Z'], // L12 (Recap T-Z)
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'] // L13 (Grand Recap)
+  ];
+
+  const levelIndex = Math.min(state.currentLevel - 1, gameLevels.length - 1);
+  return gameLevels[levelIndex >= 0 ? levelIndex : 0];
+};
+
+const getTargetScore = (level: number) => {
+  if (level <= 2) return 10;
+  if (level === 3) return 20;
+  if (level <= 5) return 20;
+  if (level === 6) return 25;
+  if (level <= 8) return 25;
+  if (level === 9) return 30;
+  if (level <= 11) return 30;
+  return 35; // L12 and L13
+};
+
+const spawnLetter = () => {
+  if (gameOver.value || levelSuccess.value || !gameIsActive.value) return;
+  
+  const pool = getLettersPool();
+  const char = pool[Math.floor(Math.random() * pool.length)];
+  const x = 50 + Math.random() * (window.innerWidth - 150);
+  
+  activeLetters.value.push({
+    id: Date.now() + Math.random(),
+    char,
+    x,
+    y: -50,
+    speed: 1.2 + state.currentLevel * 0.25 // Balanced speed progression
+  });
+};
+
+const updateGame = () => {
+  if (!gameIsActive.value || gameOver.value || levelSuccess.value) return;
+
+  let heartLostThisFrame = false;
+
+  for (let i = activeLetters.value.length - 1; i >= 0; i--) {
+    const letter = activeLetters.value[i];
+    letter.y += letter.speed;
+    
+    // Check if letter reached bottom
+    if (letter.y > window.innerHeight - 150) {
+      activeLetters.value.splice(i, 1);
+      loseHeart();
+      heartLostThisFrame = true;
+      if (state.hearts <= 0) {
+        gameOver.value = true;
+        gameIsActive.value = false;
+        break;
+      }
+    }
+  }
+
+  // Check for success ONLY if we haven't lost a heart this frame
+  if (!heartLostThisFrame && !gameOver.value) {
+    const targetScore = getTargetScore(state.currentLevel);
+    if (state.score >= targetScore && levelSuccess.value==false) {
+      console.log("game won. currentLevel before nextLevel:", state.currentLevel);
+      levelSuccess.value = true;
+      nextLevel();
+      gameIsActive.value = false;
+    }
+  }
+
+  if (gameIsActive.value) {
+    gameLoop = requestAnimationFrame(updateGame);
+  }
+};
+
+// Check if detected gesture matches the LOWEST falling letter of that type
+watch(detectedGesture, (newGesture) => {
+  if (!newGesture || !gameIsActive.value) return;
+  
+  // Find all matching letters
+  const matches = activeLetters.value
+    .map((l, index) => ({ ...l, index }))
+    .filter(l => l.char === newGesture);
+
+  if (matches.length > 0) {
+    // Sort by Y (descending) to find the lowest one
+    matches.sort((a, b) => b.y - a.y);
+    const lowestMatchIndex = matches[0].index;
+
+    activeLetters.value.splice(lowestMatchIndex, 1);
+    addScore(1);
+  }
+});
+
+// Function to start or restart a game round
+const initializeGameRound = (resetLevel = false) => {
+  cancelAnimationFrame(gameLoop); // Stop previous game loop if any
+  clearInterval(spawnInterval); // Stop previous spawn interval if any
+
+  resetGame(resetLevel); // Resets score, hearts, and currentLevel if resetLevel is true
+  
+  activeLetters.value = [];
+  gameOver.value = false;
+  levelSuccess.value = false;
+  gameIsActive.value = true; // Mark game as active
+
+  updateGame(); // Start game loop
+  spawnInterval = setInterval(spawnLetter, 2000 / (1 + state.currentLevel * 0.2));
+};
+
+const restartGame = () => {
+  initializeGameRound(true); // Reset level to 1
+};
+
+const startNextLevel = () => {
+  initializeGameRound(false); // Do not reset level (level already incremented on success)
+};
+
+onMounted(async () => {
+  if (videoRef.value && canvasRef.value) {
+    await startTracking(videoRef.value, canvasRef.value);
+  }
+  
+  // Decide what to display/do based on global game state when Game.vue mounts
+  if (state.hearts <= 0) { // Game is over
+    gameOver.value = true;
+    gameIsActive.value = false;
+    cancelAnimationFrame(gameLoop);
+    clearInterval(spawnInterval);
+  } else if (state.currentLevel > 1 && state.score > 0) { // A level was just won, display success overlay
+    levelSuccess.value = true;
+    gameIsActive.value = false;
+    cancelAnimationFrame(gameLoop);
+    clearInterval(spawnInterval);
+  } else { // Otherwise, it's a fresh start for Level 1, or explicitly starting a game
+    initializeGameRound(false);
+  }
+});
+
+onUnmounted(() => {
+  gameIsActive.value = false;
+  stopTracking(); // Ensure tracking is stopped when component unmounts
+  cancelAnimationFrame(gameLoop);
+  clearInterval(spawnInterval);
+});
+</script>
+
+<style scoped>
+.game-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 15px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  font-size: 1.5rem;
+  z-index: 10;
+}
+
+.game-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #dcfce7, #f0fdf4);
+}
+
+.falling-letter {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter-circle {
+  width: 60px;
+  height: 60px;
+  background: var(--secondary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border: 4px solid white;
+}
+
+.mini-camera {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 240px;
+  height: 180px;
+  background: #000;
+  border-radius: 15px;
+  border: 4px solid var(--primary);
+  overflow: hidden;
+}
+
+.mini-camera video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+.mini-camera canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+.feedback {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--accent);
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.overlay h2 {
+  font-size: 4rem;
+  color: var(--danger);
+  margin-bottom: 20px;
+}
+
+.overlay.success h2 {
+  color: var(--primary);
+}
+
+.overlay button {
+  background: var(--primary);
+  color: white;
+  font-size: 2rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 20px;
+}
+
+.learn-btn {
+  background: var(--secondary) !important;
+}
+
+.exit-btn {
+  background: #cbd5e1;
+  font-size: 1rem;
+}
+</style>
