@@ -21,7 +21,7 @@
         class="falling-letter"
         :style="{ left: letter.x + 'px', top: letter.y + 'px' }"
       >
-        <div class="letter-circle">{{ letter.char }}</div>
+        <div class="letter-circle" :style="{ '--ball-color': letter.color.base, '--ball-dark': letter.color.dark }">{{ letter.char }}</div>
       </div>
 
       <!-- Camera Feed (Bottom Right) -->
@@ -94,6 +94,13 @@ const goToTutorial = () => {
   setView('Tutorial');
 };
 
+const colorPool = [
+  { base: '#4ade80', dark: '#16a34a' }, 
+  { base: '#60a5fa', dark: '#2563eb' }, 
+  { base: '#facc15', dark: '#ca8a04' }, 
+  { base: '#ef4444', dark: '#b91c1c' }  
+];
+
 const getLettersPool = () => {
   const gameLevels = [
     ['A', 'B', 'C'], // L1
@@ -132,13 +139,16 @@ const spawnLetter = () => {
   const pool = getLettersPool();
   const char = pool[Math.floor(Math.random() * pool.length)];
   const x = 50 + Math.random() * (window.innerWidth - 150);
-  
+
+  const randomColor = colorPool[Math.floor(Math.random() * colorPool.length)];
+
   activeLetters.value.push({
     id: Date.now() + Math.random(),
     char,
     x,
     y: -50,
-    speed: 1.2 + state.currentLevel * 0.25 // Balanced speed progression
+    speed: 1.2 + state.currentLevel * 0.25, // Balanced speed progression
+    color: randomColor
   });
 };
 
@@ -293,16 +303,25 @@ onUnmounted(() => {
 .letter-circle {
   width: 60px;
   height: 60px;
-  background: var(--secondary);
-  color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  border: 4px solid white;
+  color: white;
+
+ background: radial-gradient(
+    circle at 30% 30%, 
+    #ffffff 5%, 
+    var(--ball-color) 40%, 
+    var(--ball-dark) 100%
+  );
+
+  box-shadow: 
+    0 8px 15px rgba(0,0,0,0.3), 
+    inset -4px -6px 10px rgba(0,0,0,0.4), 
+    inset 4px 6px 10px rgba(255,255,255,0.4);
 }
 
 .mini-camera {

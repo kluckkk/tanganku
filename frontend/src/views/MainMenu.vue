@@ -140,10 +140,14 @@
   width: 90%;
 }
 
+.overlay-content h2,
+.overlay-content p {
+  margin: 0;
+}
+
 .overlay-content h2 {
   font-size: 2.5rem;
   color: #004a9e;
-  margin: 0;
 }
 
 .option-buttons {
