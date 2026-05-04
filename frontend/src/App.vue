@@ -35,7 +35,7 @@
 
 body {
   margin: 0;
-  font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+  font-family: 'Baloo Tamma 2','Comic Sans', cursive;
   background-color: var(--bg);
   color: var(--text);
   overflow: hidden;
@@ -62,14 +62,27 @@ button {
   padding: 12px 24px;
   font-size: 1.2rem;
   font-weight: bold;
-  transition: transform 0.2s;
+  font-family: 'Alan Sans';
+  
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%);
+  background-color: #e2e8f0; 
+  
+  border-bottom: 6px solid rgba(0,0,0,0.2);
+
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  
+  transition: all 0.1s;
+  position: relative;
+  top: 0;
 }
 
 button:hover {
-  transform: scale(1.025);
+  filter: brightness(1.05);
 }
 
 button:active {
-  transform: scale(0.95);
+  top: 4px;
+  border-bottom-width: 2px;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
 }
 </style>

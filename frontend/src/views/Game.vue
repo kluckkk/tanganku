@@ -8,7 +8,9 @@
       </div>
       <div class="score">Skor: {{ state.score }}</div>
       <div class="level">Level: {{ state.currentLevel }}</div>
-      <button @click="setView('MainMenu')" class="exit-btn">Keluar</button>
+      <button class="grey-btn" @click="setView('MainMenu')">
+        <i class="pi pi-home" style="margin-right:5px;"> </i> Keluar
+      </button>
     </div>
 
     <div class="game-area" ref="gameAreaRef">
@@ -34,7 +36,7 @@
       <!-- Overlays -->
       <div v-if="gameOver" class="overlay">
         <h2>Ayo Coba Lagi!</h2>
-        <button @click="restartGame">Main Lagi</button>
+        <button @click="restartGame" class="green-btn">Main Lagi</button>
       </div>
 
       <div v-if="levelSuccess" class="overlay success">
@@ -44,11 +46,11 @@
           <button
             v-if="!isNextLevelFinal"
             @click="goToTutorial"
-            class="learn-btn"
+            class="blue-btn"
           >
             {{ isRecapNext ? 'Pelajari Huruf' : 'Pelajari Huruf Baru' }}
           </button>
-          <button @click="startNextLevel">
+          <button @click="startNextLevel" class="green-btn">
             {{ isNextLevelFinal ? 'Level Terakhir' : 'Langsung Main' }}
           </button>
           <p v-if="isNextLevelFinal" class="instruction-text">Semua huruf akan ditampilkan!</p>
@@ -265,14 +267,18 @@ onUnmounted(() => {
   background: white;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   font-size: 1.5rem;
-  z-index: 10;
+  z-index: 110;
 }
 
 .game-area {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(to bottom, #dcfce7, #f0fdf4);
+  background-color: #e4f6fff4;
+  background-image: url("../../asset/game-bg.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 .falling-letter {
@@ -339,20 +345,26 @@ onUnmounted(() => {
 }
 
 .overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 20;
+  text-align: center;
+  z-index: 100;
 }
 
 .overlay h2 {
   font-size: 4rem;
   color: var(--danger);
-  margin-bottom: 20px;
+  margin: 0;
+}
+
+.overlay p {
+  font-size: 1.5rem;
+  margin: 10px 0 20px 0;
 }
 
 .overlay.success h2 {
@@ -360,9 +372,7 @@ onUnmounted(() => {
 }
 
 .overlay button {
-  background: var(--primary);
   color: white;
-  font-size: 2rem;
 }
 
 .button-group {
@@ -370,12 +380,24 @@ onUnmounted(() => {
   gap: 20px;
 }
 
-.learn-btn {
-  background: var(--secondary) !important;
+.green-btn {
+  background-color: var(--primary);
+  font-size: 1.5rem;
+  border-bottom-color: #16a34a;
+  color: white;
 }
 
-.exit-btn {
-  background: #cbd5e1;
+.blue-btn {
+  background-color: var(--secondary);
+  font-size: 1.5rem;
+  border-bottom-color: #2563eb;
+  color: white;
+}
+
+.grey-btn {
+  background-color:  #9f9e9e;
+  color: white;
   font-size: 1rem;
+  border-bottom-color: #7f7f7f;
 }
 </style>

@@ -20,16 +20,19 @@
           <button
             v-if="!isCurrentLevelFinal"
             @click="startTutorial"
-            class="btn-learn"
+            class="blue-btn"
           >
             Pelajari Huruf
           </button>
-          <button @click="startGame" class="btn-play">
+          <button @click="startGame" class="green-btn">
             {{ isCurrentLevelFinal ? 'Level Terakhir' : 'Langsung Main' }}
           </button>
         </div>
         <p v-if="isCurrentLevelFinal" class="instruction-text">Semua huruf akan ditampilkan!</p>
-        <button @click="showPlayOptions = false" class="btn-close">Kembali</button>      </div>
+        <button class="grey-btn" @click="showPlayOptions = false">
+          <i class="pi pi-arrow-left" style="margin-right:5px;"> </i> Kembali
+        </button>
+        </div>
     </div>
   </div>
 </template>
@@ -63,13 +66,17 @@
 
 <style scoped>
 .menu-container {
-  background-color: #e9ddbaf4;
+  background-color: #e4f6fff4;
+  background-image: url("../../asset/main-menu-bg.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 20px;
+  gap: 4px;
 }
 
 .title {
@@ -95,21 +102,22 @@
   background-color: var(--primary);
   color: white;
   font-size: 2rem;
-  box-shadow: 0 8px 0 #16a34a;
+  border-bottom-color: #16a34a;
 }
 
 .btn-kamus {
   background-color: var(--secondary);
   color: white;
   font-size: 2rem;
-  box-shadow: 0 8px 0 #2563eb;
+  border-bottom-color: #2563eb;
 }
 
 .stats {
   font-size: 1.2rem;
+  color: white;
+  margin: 0;
 }
 
-/* Overlay Styles */
 .overlay {
   position: fixed;
   inset: 0;
@@ -145,22 +153,24 @@
   width: 100%;
 }
 
-.btn-learn {
-  background-color: var(--secondary);
-  color: white;
-  font-size: 1.5rem;
-}
-
-.btn-play {
+.green-btn {
   background-color: var(--primary);
-  color: white;
   font-size: 1.5rem;
+  border-bottom-color: #16a34a;
+  color: white;
 }
 
-.btn-close {
-  background-color: #cbd5e1;
-  color: #334155;
+.blue-btn {
+  background-color: var(--secondary);
+  font-size: 1.5rem;
+  border-bottom-color: #2563eb;
+  color: white;
+}
+
+.grey-btn {
+  background-color:  #9f9e9e;
+  color: white;
   font-size: 1rem;
-  margin-top: 10px;
+  border-bottom-color: #7f7f7f;
 }
 </style>

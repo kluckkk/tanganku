@@ -1,8 +1,10 @@
 <template>
   <div class="tutorial-container">
     <div class="header">
-      <button @click="goBack" class="back-btn">Batal</button>
-      <h2>Tutorial: Belajar Huruf</h2>
+      <button @click="goBack" class="grey-btn">
+        <i class="pi pi-arrow-left" style="margin-right:5px;"> </i> Kembali
+      </button>
+      <h1>Tutorial: Belajar Huruf</h1>
       <div class="progress-info">
         Level: {{ currentTutorialLevel }} | Huruf: {{ currentLetter }}
       </div>
@@ -11,7 +13,7 @@
     <div class="content">
       <div class="left-panel">
         <div class="instruction">
-          Tirukan gerakan huruf <strong>{{ currentLetter }}</strong>
+          Tirukan isyarat huruf <strong>{{ currentLetter }}</strong>
           <div class="counter">{{ repeatCount }}/3</div>
         </div>
         <div class="sign-image">
@@ -115,6 +117,11 @@
   flex-direction: column;
   height: 100%;
   padding: 20px;
+  background-color: #e4f6fff4;
+  background-image: url("../../asset/game-bg.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 .header {
@@ -219,4 +226,12 @@
   border-radius: 30px;
   font-weight: bold;
 }
+
+.grey-btn {
+  background-color:  #9f9e9e;
+  color: white;
+  font-size: 1rem;
+  border-bottom-color: #7f7f7f;
+}
+
 </style>

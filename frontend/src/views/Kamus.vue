@@ -1,14 +1,15 @@
 <template>
   <div class="kamus-container">
     <div class="header">
-      <button @click="setView('MainMenu')" class="back-btn">Kembali</button>
-      <h1>Kamus BISINDO</h1>
+      <button class="grey-btn" @click="setView('MainMenu')">
+        <i class="pi pi-arrow-left" style="margin-right:5px;"> </i> Kembali
+      </button>
+      <h1>Kamus Abjad BISINDO</h1>
     </div>
 
     <div class="grid">
       <div v-for="letter in alphabets" :key="letter" class="card">
         <div class="letter-img">
-          <!-- Placeholder for actual sign images -->
           <img :src="`/assets/signs/${letter}.png`" :alt="letter" @error="handleImgError">
           <span class="placeholder-text" v-if="imgErrors[letter]">{{ letter }}</span>
         </div>
@@ -37,6 +38,11 @@ const handleImgError = (e: any) => {
   padding: 20px;
   overflow-y: auto;
   height: 100%;
+  background-color: #e4f6fff4;
+  background-image: url("../../asset/game-bg.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 .header {
@@ -54,16 +60,22 @@ const handleImgError = (e: any) => {
 }
 
 .card {
-  background: white;
-  border-radius: 15px;
-  padding: 10px;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
+  padding: 10px;
+  background: linear-gradient(145deg, #ffffff, #ecfffe);
+  border-radius: 15px;
+  padding: 12px;
+  
+  box-shadow: 
+    0 6px 0 rgba(0,0,0,0.1),   
+    0 8px 20px rgba(0,0,0,0.1);
+
+  transition: all 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px) scale(1.03);
+  filter: brightness(1.01);
 }
 
 .letter-img {
@@ -94,8 +106,11 @@ const handleImgError = (e: any) => {
   font-weight: bold;
 }
 
-.back-btn {
-  background: var(--accent);
-  color: var(--text);
+.grey-btn {
+  background-color:  #9f9e9e;
+  color: white;
+  font-size: 1rem;
+  border-bottom-color: #7f7f7f;
 }
+
 </style>
