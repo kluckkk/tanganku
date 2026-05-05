@@ -10,7 +10,7 @@
     <div class="grid">
       <div v-for="letter in alphabets" :key="letter" class="card">
         <div class="letter-img">
-          <img :src="`/assets/signs/${letter}.png`" :alt="letter" @error="handleImgError">
+          <img :src="`../asset/diagram/${letter}.png`" :alt="letter" @error="handleImgError">
           <span class="placeholder-text" v-if="imgErrors[letter]">{{ letter }}</span>
         </div>
         <div class="label">{{ letter }}</div>

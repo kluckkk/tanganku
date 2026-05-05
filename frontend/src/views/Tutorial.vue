@@ -17,7 +17,7 @@
           <div class="counter">{{ repeatCount }}/3</div>
         </div>
         <div class="sign-image">
-          <img :src="`/assets/signs/${currentLetter}.png`" :alt="currentLetter" @error="handleImgError">
+          <img :src="`../asset/diagram/${currentLetter}.png`" :alt="currentLetter" @error="handleImgError">
           <div v-if="imgError" class="placeholder-letter">{{ currentLetter }}</div>
         </div>
       </div>
